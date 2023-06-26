@@ -2,11 +2,14 @@ package com.example.cloudstorage.service;
 
 
 import com.example.cloudstorage.entity.User;
+import com.example.cloudstorage.exception.SessionException;
 import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.utils.CommonUtils;
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -44,7 +47,19 @@ public class AuthentificationService {
         return response;
     }
 
-    public Session getSession(String authToken) {
-        return sessions.getOrDefault(authToken, null);
+
+
+    public void logout(String authToken) {
+        Session sessionResult = sessions.getOrDefault(authToken,null);
+        if(sessionResult!=null){
+            sessions.remove(sessionResult.getId(),sessionResult);
+        }
+        else{
+            throw new SessionException("Пользователь с таким логином не найден");
+
+        }
+        log.info("Пользователь "+authToken+" вышел из сессии");
+
+
     }
 }
