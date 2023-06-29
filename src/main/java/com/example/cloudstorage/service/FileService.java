@@ -8,10 +8,13 @@ import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.repository.UserRepository;
 import lombok.AllArgsConstructor;
+import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import javax.swing.*;
 import java.io.IOException;
@@ -20,29 +23,28 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 @Service
+
 @AllArgsConstructor
 @Slf4j
 public class FileService {
 
-    private final FileRepository fileRepository;
-    private ConcurrentMap<String, Session> sessions;
-    private UserRepository userRepository;
+    private FileRepository fileRepository;
+    private AuthentificationService authentificationService;
 
-    public FileService(FileRepository fileRepository) {
-        this.fileRepository = fileRepository;
-        this.userRepository = userRepository;
-        this.sessions = new ConcurrentHashMap<>();
-    }
+
 
     public ResponseEntity<String> uploadFile(String authToken, String fileName, MultipartFile multipartFile) {
-        Session sessionResult = sessions.getOrDefault(authToken, null);
-        Long userId = sessionResult.getUserID();
-        File uploadFile = null;
-        if (sessionResult != null) {
-            fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
-                    new DuplicateFileNameException("Файл " + fileName + " уже существует"));
-            log.info("Ошибка передачи файла. Найден дубликат");
+        Session sessionResult = authentificationService.getSession(authToken);
+        if (sessionResult == null) {
+            log.info("Пользователь не найден");
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
         }
+        Long userId = sessionResult.getUserID();
+        File uploadFile;
+        fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
+                new DuplicateFileNameException("Файл " + fileName + " уже существует"));
+        log.info("Ошибка передачи файла. Найден дубликат");
         try {
             uploadFile = File.builder()
                     .fileName(fileName)

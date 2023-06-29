@@ -15,6 +15,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -33,6 +34,8 @@ public class AuthentificationService {
 
     public AuthentificationResponse authentificationLogin(AuthentificationRequest authentificationRequest) {
         AuthentificationResponse response = null;
+        List<User>findUsers = userRepository.findAll();
+
         Optional<User> userFromDataBase = userRepository.findUserByLoginAndPassword(authentificationRequest.getLogin(),
                 authentificationRequest.getPassword());
         if (userFromDataBase.isPresent()) {
@@ -48,7 +51,6 @@ public class AuthentificationService {
     }
 
 
-
     public void logout(String authToken) {
         Session sessionResult = sessions.getOrDefault(authToken,null);
         if(sessionResult!=null){
@@ -61,5 +63,8 @@ public class AuthentificationService {
         log.info("Пользователь "+authToken+" вышел из сессии");
 
 
+    }
+    public Session getSession(String authToken){
+        return sessions.get(authToken);
     }
 }
