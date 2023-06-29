@@ -25,6 +25,8 @@ public class File {
 
     @Column(name = "type",nullable = false)
     private String type;
+    @Column(name = "content",nullable = false)
+    private byte[] fileContent;
 
     @CreationTimestamp
     @Temporal(TemporalType.TIMESTAMP)

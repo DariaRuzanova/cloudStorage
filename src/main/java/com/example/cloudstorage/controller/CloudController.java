@@ -28,6 +28,8 @@ public class CloudController {
     public void logout(@RequestHeader("auth-token") String authToken) {
         authentificationService.logout(authToken);
     }
+
+
     @PostMapping("/file")
     public ResponseEntity<String> uploadFile(@RequestHeader("auth-token") @NotNull String authToken,
                                              @RequestParam("filename") @NotNull String fileName,
