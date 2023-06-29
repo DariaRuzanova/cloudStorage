@@ -4,13 +4,12 @@ import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
 import com.example.cloudstorage.service.AuthentificationService;
 import com.example.cloudstorage.service.FileService;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 @RestController
 @AllArgsConstructor
@@ -28,6 +27,12 @@ public class CloudController {
     @PostMapping("/logout")
     public void logout(@RequestHeader("auth-token") String authToken) {
         authentificationService.logout(authToken);
+    }
+    @PostMapping("/file")
+    public ResponseEntity<String> uploadFile(@RequestHeader("auth-token") @NotNull String authToken,
+                                             @RequestParam("filename") @NotNull String fileName,
+                                             @RequestBody @NotNull MultipartFile file) {
+        return fileService.uploadFile(authToken, fileName, file);
     }
 
 
