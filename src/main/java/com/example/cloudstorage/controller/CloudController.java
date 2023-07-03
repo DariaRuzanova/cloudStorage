@@ -2,6 +2,7 @@ package com.example.cloudstorage.controller;
 
 import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.service.AuthentificationService;
 import com.example.cloudstorage.service.FileService;
 import jakarta.validation.constraints.NotNull;
@@ -46,7 +47,14 @@ public class CloudController {
     @GetMapping("/file")
     public ResponseEntity<byte[]> getFile(@RequestHeader("auth-token") @NotNull String authToken,
                                           @RequestParam("filename") @NotNull String fileName) {
-        return fileService.getFile(authToken,fileName);
+        return fileService.getFile(authToken, fileName);
+    }
+
+    @PutMapping("/file")
+    public ResponseEntity<String> renameFile(@RequestHeader("auth-token") @NotNull String authToken,
+                                           @RequestParam("filename") @NotNull String fileName,
+                                           @RequestBody @NotNull NewFileName newFileName){
+        return fileService.renameFile(authToken,fileName,newFileName);
     }
 
 }

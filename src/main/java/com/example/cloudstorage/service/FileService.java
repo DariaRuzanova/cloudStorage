@@ -4,12 +4,10 @@ import com.example.cloudstorage.entity.File;
 import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
-import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.FileRepository;
-import com.example.cloudstorage.repository.UserRepository;
 import lombok.AllArgsConstructor;
-import lombok.NoArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -19,11 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
-import javax.swing.*;
 import java.io.IOException;
-import java.util.Optional;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 
 @Service
 
@@ -61,8 +55,7 @@ public class FileService {
 
     public ResponseEntity<String> deleteFile(String authToken, String fileName) {
         Long userId = checkUser(authToken);
-        File deleteFile = fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
-                new FileNotFoundException("Файл с именем " + fileName + " не найден!"));
+        File deleteFile = checkFile(userId, fileName);
         fileRepository.deleteById(deleteFile.getId());
         log.info("Пользователь с id {} успешно удалил файл {}", userId, fileName);
         return ResponseEntity.ok().body("Файл " + fileName + " удален");
@@ -70,13 +63,24 @@ public class FileService {
 
     public ResponseEntity<byte[]> getFile(String authToken, String fileName) {
         Long userId = checkUser(authToken);
-        File uploadFile = fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
-                new FileNotFoundException("Файл с именем " + fileName + " не найден!"));
+        File uploadFile = checkFile(userId, fileName);
         log.info("Пользователь с id {} успешно скачал файл {}", userId, fileName);
         return ResponseEntity.ok()
-                .headers(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + uploadFile.getFileName())
+                .header(HttpHeaders.CONTENT_DISPOSITION, "attachment;filename=" + uploadFile.getFileName())
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
                 .body(uploadFile.getFileContent());
+    }
+
+    public ResponseEntity<String> renameFile(String authToken, String fileName, NewFileName newFileName) {
+        Long userId = checkUser(authToken);
+        File fileToRename = checkFile(userId, fileName);
+        fileRepository.findFileByFileName(newFileName.getFileName()).orElseThrow(() ->
+                new DuplicateFileNameException("Файл с таким именем уже существует в базе данных"));
+        fileToRename.setFileName(newFileName.getFileName());
+        fileRepository.save(fileToRename);
+        log.info("Пользователь с id {} успешно изменил имя файла {} на {}", userId, fileName, newFileName.getFileName());
+        return ResponseEntity.ok().body("Имя файла "+fileName+" изменено на "+newFileName.getFileName());
+
     }
 
     public Long checkUser(String authToken) {
@@ -87,5 +91,12 @@ public class FileService {
         }
         return sessionResult.getUserID();
     }
+
+    public File checkFile(Long userId, String fileName) {
+        return fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
+                new FileNotFoundException("Файл с именем " + fileName + " не найден!"));
+    }
+
+
 }
 
