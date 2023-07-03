@@ -44,7 +44,9 @@ public class AuthentificationService {
             response = new AuthentificationResponse(session.getId());
             log.info("Пользователь "+authentificationRequest.getLogin()+" авторизован");
         } else {
+            log.info("Ошибка авторизации");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+
 
         }
         return response;

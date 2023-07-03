@@ -37,5 +37,16 @@ public class CloudController {
         return fileService.uploadFile(authToken, fileName, file);
     }
 
+    @DeleteMapping("/file")
+    public ResponseEntity<String> deleteFile(@RequestHeader("auth-token") @NotNull String authToken,
+                                             @RequestParam("filename") @NotNull String fileName) {
+        return fileService.deleteFile(authToken, fileName);
+    }
+
+    @GetMapping("/file")
+    public ResponseEntity<byte[]> getFile(@RequestHeader("auth-token") @NotNull String authToken,
+                                          @RequestParam("filename") @NotNull String fileName) {
+        return fileService.getFile(authToken,fileName);
+    }
 
 }
