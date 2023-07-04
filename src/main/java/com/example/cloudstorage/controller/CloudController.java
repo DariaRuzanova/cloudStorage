@@ -1,7 +1,9 @@
 package com.example.cloudstorage.controller;
 
+import com.example.cloudstorage.entity.File;
 import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.service.AuthentificationService;
 import com.example.cloudstorage.service.FileService;
@@ -11,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 @RestController
 @AllArgsConstructor
@@ -52,9 +56,15 @@ public class CloudController {
 
     @PutMapping("/file")
     public ResponseEntity<String> renameFile(@RequestHeader("auth-token") @NotNull String authToken,
-                                           @RequestParam("filename") @NotNull String fileName,
-                                           @RequestBody @NotNull NewFileName newFileName){
-        return fileService.renameFile(authToken,fileName,newFileName);
+                                             @RequestParam("filename") @NotNull String fileName,
+                                             @RequestBody @NotNull NewFileName newFileName) {
+        return fileService.renameFile(authToken, fileName, newFileName);
+    }
+
+    @GetMapping("/list")
+    public ResponseEntity<List<FileData>> getAllFiles(@RequestParam("auth-token") @NotNull String authToken,
+                                                      @RequestParam("limit") @NotNull Integer limit) {
+        return fileService.getAllFiles(authToken, limit);
     }
 
 }

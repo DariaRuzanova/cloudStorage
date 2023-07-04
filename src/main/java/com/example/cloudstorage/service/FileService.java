@@ -4,6 +4,7 @@ import com.example.cloudstorage.entity.File;
 import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
+import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.FileRepository;
@@ -18,6 +19,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 
@@ -82,6 +88,17 @@ public class FileService {
         return ResponseEntity.ok().body("Имя файла "+fileName+" изменено на "+newFileName.getFileName());
 
     }
+    public ResponseEntity<List<FileData>> getAllFiles(String authToken, Integer limit) {
+        Long userId = checkUser(authToken);
+        List<File> allFiles = fileRepository.findFilesByUserIdWithLimit(userId,limit);
+        List<FileData> listFiles = allFiles.stream()
+                .map(file -> FileData.builder()
+                        .fileName(file.getFileName())
+                        .size(file.getSize())
+                        .build()).toList();
+        log.info("Файлы пользователя с id {}", userId);
+        return ResponseEntity.ok().body(listFiles);
+    }
 
     public Long checkUser(String authToken) {
         Session sessionResult = authentificationService.getSession(authToken);
@@ -96,6 +113,7 @@ public class FileService {
         return fileRepository.findFileByUserIdAndFileName(userId, fileName).orElseThrow(() ->
                 new FileNotFoundException("Файл с именем " + fileName + " не найден!"));
     }
+
 
 
 }
