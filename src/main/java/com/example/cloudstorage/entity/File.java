@@ -41,4 +41,12 @@ public class File {
     private User user;
 
 
+    public File(long id, String fileName, byte[] fileContent, User user) {
+        this.id = id;
+        this.fileName = fileName;
+        this.fileContent = fileContent;
+        this.user = user;
+    }
+
+
 }
