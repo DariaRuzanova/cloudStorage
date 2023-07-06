@@ -21,9 +21,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Service
 
@@ -90,12 +87,13 @@ public class FileService {
     }
     public ResponseEntity<List<FileData>> getAllFiles(String authToken, Integer limit) {
         Long userId = checkUser(authToken);
-        List<File> allFiles = fileRepository.findFilesByUserIdWithLimit(userId,limit);
-        List<FileData> listFiles = allFiles.stream()
-                .map(file -> FileData.builder()
-                        .fileName(file.getFileName())
-                        .size(file.getSize())
-                        .build()).toList();
+        List<FileData> listFiles = new ArrayList<>();
+//        List<File> allFiles = fileRepository.findFilesByUserIdWithLimit(userId,limit);
+//        List<FileData> listFiles = allFiles.stream()
+//                .map(file -> FileData.builder()
+//                        .fileName(file.getFileName())
+//                        .size(file.getSize())
+//                        .build()).toList();
         log.info("Файлы пользователя с id {}", userId);
         return ResponseEntity.ok().body(listFiles);
     }
