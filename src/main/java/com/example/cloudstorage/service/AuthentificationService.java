@@ -12,6 +12,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -32,7 +33,7 @@ public class AuthentificationService {
         this.userRepository = userRepository;
     }
 
-    public AuthentificationResponse authentificationLogin(AuthentificationRequest authentificationRequest) {
+    public ResponseEntity<AuthentificationResponse> authentificationLogin(AuthentificationRequest authentificationRequest) {
         AuthentificationResponse response = null;
         List<User>findUsers = userRepository.findAll();
 
@@ -49,11 +50,11 @@ public class AuthentificationService {
 
 
         }
-        return response;
+        return ResponseEntity.ok().body(response);
     }
 
 
-    public void logout(String authToken) {
+    public ResponseEntity<Void> logout(String authToken) {
         Session sessionResult = sessions.getOrDefault(authToken,null);
         if(sessionResult!=null){
             sessions.remove(sessionResult.getId(),sessionResult);
@@ -63,7 +64,7 @@ public class AuthentificationService {
 
         }
         log.info("Пользователь "+authToken+" вышел из сессии");
-
+        return ResponseEntity.ok().body(null);
 
     }
     public Session getSession(String authToken){

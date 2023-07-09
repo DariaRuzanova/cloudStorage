@@ -25,7 +25,7 @@ public class CloudController {
     private final FileService fileService;
 
     @PostMapping("/login")
-    public AuthentificationResponse login(@RequestBody AuthentificationRequest authentificationRequest) {
+    public ResponseEntity<AuthentificationResponse> login(@RequestBody AuthentificationRequest authentificationRequest) {
         return authentificationService.authentificationLogin(authentificationRequest);
     }
 

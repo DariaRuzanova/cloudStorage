@@ -5,6 +5,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.hibernate.annotations.CreationTimestamp;
 import org.springframework.data.annotation.CreatedDate;
 
@@ -14,7 +15,8 @@ import java.util.Date;
 @AllArgsConstructor
 @Builder
 @Entity
-@Table(name = "files")
+@NoArgsConstructor
+@Table(name = "files",schema = "cloud_DB")
 public class File {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

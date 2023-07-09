@@ -8,6 +8,7 @@ import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.FileRepository;
+import com.example.cloudstorage.repository.UserRepository;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpHeaders;
@@ -29,6 +30,7 @@ import java.util.List;
 public class FileService {
 
     private FileRepository fileRepository;
+    private UserRepository userRepository;
     private AuthentificationService authentificationService;
 
 
@@ -40,12 +42,13 @@ public class FileService {
         });
         log.info("Ошибка передачи файла. Файл существует");
         try {
+            User user = userRepository.getReferenceById(userId);
             uploadFile = File.builder()
                     .fileName(fileName)
                     .type(multipartFile.getContentType())
                     .fileContent(multipartFile.getBytes())
                     .size(multipartFile.getSize())
-                    .id(User.builder().id(userId).build().getId())
+                    .user(user)
                     .build();
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -77,8 +80,9 @@ public class FileService {
     public ResponseEntity<String> renameFile(String authToken, String fileName, NewFileName newFileName) {
         Long userId = checkUser(authToken);
         File fileToRename = checkFile(userId, fileName);
-        fileRepository.findFileByFileName(newFileName.getFileName()).orElseThrow(() ->
-                new DuplicateFileNameException("Файл с таким именем уже существует в базе данных"));
+        if(fileRepository.findFileByFileName(newFileName.getFileName()).isPresent()){
+            throw new DuplicateFileNameException("Файл с таким именем уже существует в базе данных");
+        }
         fileToRename.setFileName(newFileName.getFileName());
         fileRepository.save(fileToRename);
         log.info("Пользователь с id {} успешно изменил имя файла {} на {}", userId, fileName, newFileName.getFileName());
