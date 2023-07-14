@@ -4,6 +4,7 @@ import com.example.cloudstorage.entity.File;
 import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
+import com.example.cloudstorage.exception.InputDataException;
 import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.model.Session;
@@ -20,8 +21,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 
@@ -89,16 +90,19 @@ public class FileService {
         return ResponseEntity.ok().body("Имя файла "+fileName+" изменено на "+newFileName.getFileName());
 
     }
-    public ResponseEntity<List<FileData>> getAllFiles(String authToken, Integer limit) {
+    public ResponseEntity<List<FileData>> getAllFiles(String authToken, int limit) {
         Long userId = checkUser(authToken);
-        List<FileData> listFiles = new ArrayList<>();
-//        List<File> allFiles = fileRepository.findFilesByUserIdWithLimit(userId,limit);
-//        List<FileData> listFiles = allFiles.stream()
-//                .map(file -> FileData.builder()
-//                        .fileName(file.getFileName())
-//                        .size(file.getSize())
-//                        .build()).toList();
-        log.info("Файлы пользователя с id {}", userId);
+        if (limit < 0) {
+            throw new InputDataException("Значение лимита ошибочно");
+        }
+//        List<FileData> listFiles = new ArrayList<>();
+        List<File> allFiles = fileRepository.findFilesByUserId(userId);
+        List<FileData> listFiles = allFiles.stream()
+                .map(file -> FileData.builder()
+                        .fileName(file.getFileName())
+                        .size(file.getSize())
+                        .build()).collect(Collectors.toList());
+        log.info("Был получен список файлов пользователя с id {}", userId);
         return ResponseEntity.ok().body(listFiles);
     }
 

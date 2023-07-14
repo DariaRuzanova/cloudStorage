@@ -8,8 +8,6 @@ import com.example.cloudstorage.model.AuthentificationResponse;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.utils.CommonUtils;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,7 +23,7 @@ import java.util.concurrent.ConcurrentMap;
 
 @Slf4j
 public class AuthentificationService {
-    private ConcurrentMap<String, Session> sessions;
+    private final ConcurrentMap<String, Session> sessions;
     private final UserRepository userRepository;
 
     public AuthentificationService(UserRepository userRepository) {
@@ -35,7 +33,7 @@ public class AuthentificationService {
 
     public ResponseEntity<AuthentificationResponse> authentificationLogin(AuthentificationRequest authentificationRequest) {
         AuthentificationResponse response = null;
-        List<User>findUsers = userRepository.findAll();
+//        List<User>findUsers = userRepository.findAll();
 
         Optional<User> userFromDataBase = userRepository.findUserByLoginAndPassword(authentificationRequest.getLogin(),
                 authentificationRequest.getPassword());
@@ -47,8 +45,6 @@ public class AuthentificationService {
         } else {
             log.info("Ошибка авторизации");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
-
-
         }
         return ResponseEntity.ok().body(response);
     }
