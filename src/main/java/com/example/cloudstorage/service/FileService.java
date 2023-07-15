@@ -6,7 +6,6 @@ import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
 import com.example.cloudstorage.exception.InputDataException;
 import com.example.cloudstorage.model.FileData;
-import com.example.cloudstorage.model.NewFileName;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.repository.UserRepository;
@@ -78,16 +77,16 @@ public class FileService {
                 .body(uploadFile.getFileContent());
     }
 
-    public ResponseEntity<String> renameFile(String authToken, String fileName, NewFileName newFileName) {
+    public ResponseEntity<String> renameFile(String authToken, String fileName, String newFileName) {
         Long userId = checkUser(authToken);
         File fileToRename = checkFile(userId, fileName);
-        if(fileRepository.findFileByFileName(newFileName.getFileName()).isPresent()){
+        if(fileRepository.findFileByFileName(newFileName).isPresent()){
             throw new DuplicateFileNameException("Файл с таким именем уже существует в базе данных");
         }
-        fileToRename.setFileName(newFileName.getFileName());
+        fileToRename.setFileName(newFileName);
         fileRepository.save(fileToRename);
-        log.info("Пользователь с id {} успешно изменил имя файла {} на {}", userId, fileName, newFileName.getFileName());
-        return ResponseEntity.ok().body("Имя файла "+fileName+" изменено на "+newFileName.getFileName());
+        log.info("Пользователь с id {} успешно изменил имя файла {} на {}", userId, fileName, newFileName);
+        return ResponseEntity.ok().body("Имя файла "+fileName+" изменено на "+newFileName);
 
     }
     public ResponseEntity<List<FileData>> getAllFiles(String authToken, int limit) {

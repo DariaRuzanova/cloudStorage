@@ -48,4 +48,10 @@ public class File {
         this.fileContent = fileContent;
         this.user = user;
     }
+
+    public File(long id, String fileName, User user) {
+        this.id = id;
+        this.fileName = fileName;
+        this.user = user;
+    }
 }

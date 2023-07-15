@@ -5,7 +5,7 @@ import com.example.cloudstorage.exception.FileNotFoundException;
 import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
 import com.example.cloudstorage.model.FileData;
-import com.example.cloudstorage.model.NewFileName;
+import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.service.AuthentificationService;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -37,10 +37,12 @@ import static org.junit.Assert.*;
 public class FileServiceTest {
 
     private final String fileName = "text.txt";
-    private final NewFileName fileNameNew = new NewFileName("text2.txt");
+    private final String fileNameNew = "text2.txt";
 
     @Autowired
     private AuthentificationService authentificationService;
+    @Autowired
+    private FileRepository fileRepository;
 
     @Autowired
     private com.example.cloudstorage.service.FileService fileService;
@@ -67,7 +69,9 @@ public class FileServiceTest {
                 new AuthentificationRequest("petr", "qwerty"));
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
         MultipartFile multipartFile = multipartFileGet(fileName);
-//        fileService.deleteFile(authToken, fileName);
+        if (fileRepository.findFileByFileName(fileName).isPresent()) {
+            fileService.deleteFile(authToken, fileName);
+        }
         ResponseEntity<String> result = fileService.uploadFile(authToken, fileName, multipartFile);
         assertNotNull(result);
     }
@@ -79,7 +83,7 @@ public class FileServiceTest {
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
         ResponseEntity<String> actual = fileService.renameFile(authToken, fileName, fileNameNew);
         ResponseEntity<String> expected = ResponseEntity.ok().body(
-                "Имя файла " + fileName + " изменено на " + fileNameNew.getFileName());
+                "Имя файла " + fileName + " изменено на " + fileNameNew);
         assertEquals(expected, actual);
     }
 
@@ -89,7 +93,9 @@ public class FileServiceTest {
                 new AuthentificationRequest("sasha", "nmbqwe"));
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
         String fileNameTest = "test.txt";
-//        fileService.deleteFile(authToken, fileNameTest);
+        if (fileRepository.findFileByFileName(fileName).isPresent()) {
+            fileService.deleteFile(authToken, fileName);
+        }
         MultipartFile multipartFile = multipartFileGet(fileNameTest);
         fileService.uploadFile(authToken, fileNameTest, multipartFile);
         ResponseEntity<byte[]> fileContent = fileService.getFile(authToken, fileNameTest);
@@ -136,12 +142,12 @@ public class FileServiceTest {
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
 
 //        fileService.uploadFile(authToken,fileName1,multipartFile1);
-        fileService.uploadFile(authToken,fileName2,multipartFile2);
+        fileService.uploadFile(authToken, fileName2, multipartFile2);
 
         ResponseEntity<List<FileData>> actual = fileService.getAllFiles(authToken, limit);
-        ResponseEntity<List<FileData>>expected = ResponseEntity.ok().body(list);
+        ResponseEntity<List<FileData>> expected = ResponseEntity.ok().body(list);
 
-        assertEquals(expected,actual);
+        assertEquals(expected, actual);
 
     }
 }
