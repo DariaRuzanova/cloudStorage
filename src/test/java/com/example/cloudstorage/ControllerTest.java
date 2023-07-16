@@ -1,10 +1,15 @@
 package com.example.cloudstorage;
 
+
+import com.example.cloudstorage.entity.File;
+import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.model.AuthentificationRequest;
 import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.service.AuthentificationService;
 import com.example.cloudstorage.service.FileService;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
 import org.junit.Test;
@@ -21,6 +26,10 @@ import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -191,11 +200,38 @@ public class ControllerTest {
         assertTrue(fileRepository.findFileByUserIdAndFileName(userId, fileName).isEmpty());
     }
 
+    @SneakyThrows
+    @Test
     public void getAllFilesTest() {
-        String filename1 = "hello.txt";
-        String filename2 = "hello2.txt";
+        String fileName1 = "hello.txt";
+        String fileName2 = "hello2.txt";
         String fileName3 = "test.txt";
         String authToken = getAuthToken();
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        MockMultipartFile file1 = new MockMultipartFile("file", fileName1, MediaType.TEXT_PLAIN_VALUE, "Создаем файл hello.txt".getBytes());
+        MockMultipartFile file2 = new MockMultipartFile("file", fileName1, MediaType.TEXT_PLAIN_VALUE, "Заполняем файл hello2.txt".getBytes());
+        MockMultipartFile file3 = new MockMultipartFile("file", fileName1, MediaType.TEXT_PLAIN_VALUE, "Заполнили файл test.txt".getBytes());
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName1).isEmpty()) {
+            fileService.uploadFile(authToken, fileName1, file1);
+        }
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName2).isEmpty()) {
+            fileService.uploadFile(authToken, fileName2, file2);
+        }
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName3).isEmpty()) {
+            fileService.uploadFile(authToken, fileName3, file3);
+        }
+        var request = MockMvcRequestBuilders.get("/list")
+                .header(header, authToken)
+                .queryParam("limit", "3");
+        MvcResult result = mvc.perform(request).andExpect(MockMvcResultMatchers.status().isOk()).andReturn();
+        String response = result.getResponse().getContentAsString();
+        ObjectMapper mapper = new ObjectMapper();
+
+        List<FileData> listFiles = mapper.readValue(response, new TypeReference<>() {
+        });
+        assertFalse(listFiles.isEmpty());
+
+
 
     }
 

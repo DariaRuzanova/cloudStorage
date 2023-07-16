@@ -60,8 +60,8 @@ public class CloudController {
     }
 
     @GetMapping("/list")
-    public ResponseEntity<List<FileData>> getAllFiles(@RequestParam("auth-token") @NotNull String authToken,
-                                                      @RequestParam("limit") @NotNull Integer limit) {
+    public ResponseEntity<List<FileData>> getAllFiles(@RequestHeader("auth-token") @NotNull String authToken,
+                                                      @RequestParam("limit") @NotNull int limit) {
         return fileService.getAllFiles(authToken, limit);
     }
 
