@@ -1,6 +1,6 @@
 FROM openjdk:17-jdk-alpine
 
-EXPOSE 8080
+EXPOSE 8081
 
 COPY target/cloudStorage-0.0.1-SNAPSHOT.jar app.jar
 
