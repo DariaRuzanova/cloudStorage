@@ -1,8 +1,8 @@
 package com.example.cloudstorage;
 
 
-import com.example.DTO.AuthentificationRequest;
-import com.example.DTO.AuthentificationResponse;
+import com.example.cloudstorage.DTO.AuthentificationRequest;
+import com.example.cloudstorage.DTO.AuthentificationResponse;
 import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
 import com.example.cloudstorage.model.FileData;

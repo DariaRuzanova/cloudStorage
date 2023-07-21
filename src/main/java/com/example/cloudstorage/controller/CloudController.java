@@ -1,7 +1,7 @@
 package com.example.cloudstorage.controller;
 
-import com.example.DTO.AuthentificationRequest;
-import com.example.DTO.AuthentificationResponse;
+import com.example.cloudstorage.DTO.AuthentificationRequest;
+import com.example.cloudstorage.DTO.AuthentificationResponse;
 import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.service.AuthentificationService;
 import com.example.cloudstorage.service.FileService;

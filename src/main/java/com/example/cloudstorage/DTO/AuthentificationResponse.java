@@ -1,4 +1,4 @@
-package com.example.DTO;
+package com.example.cloudstorage.DTO;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;

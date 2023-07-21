@@ -1,8 +1,8 @@
 package com.example.cloudstorage;
 
 import com.example.cloudstorage.exception.SessionException;
-import com.example.DTO.AuthentificationRequest;
-import com.example.DTO.AuthentificationResponse;
+import com.example.cloudstorage.DTO.AuthentificationRequest;
+import com.example.cloudstorage.DTO.AuthentificationResponse;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.service.AuthentificationService;
