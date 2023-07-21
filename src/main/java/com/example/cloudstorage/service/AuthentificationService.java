@@ -1,10 +1,9 @@
 package com.example.cloudstorage.service;
 
-
 import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.exception.SessionException;
-import com.example.cloudstorage.model.AuthentificationRequest;
-import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.DTO.AuthentificationRequest;
+import com.example.DTO.AuthentificationResponse;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.utils.CommonUtils;
@@ -14,7 +13,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -32,8 +30,7 @@ public class AuthentificationService {
     }
 
     public ResponseEntity<AuthentificationResponse> authentificationLogin(AuthentificationRequest authentificationRequest) {
-        AuthentificationResponse response = null;
-//        List<User>findUsers = userRepository.findAll();
+        AuthentificationResponse response;
 
         Optional<User> userFromDataBase = userRepository.findUserByLoginAndPassword(authentificationRequest.getLogin(),
                 authentificationRequest.getPassword());
@@ -41,9 +38,9 @@ public class AuthentificationService {
             Session session = new Session(CommonUtils.createID(), userFromDataBase.get().getId());
             sessions.put(session.getId(), session);
             response = new AuthentificationResponse(session.getId());
-            log.info("Пользователь "+authentificationRequest.getLogin()+" авторизован");
+            log.info("Пользователь " + authentificationRequest.getLogin() + " авторизован");
         } else {
-            log.info("Ошибка авторизации");
+            log.error("Ошибка авторизации");
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
         }
         return ResponseEntity.ok().body(response);
@@ -51,19 +48,20 @@ public class AuthentificationService {
 
 
     public ResponseEntity<Void> logout(String authToken) {
-        Session sessionResult = sessions.getOrDefault(authToken,null);
-        if(sessionResult!=null){
-            sessions.remove(sessionResult.getId(),sessionResult);
-        }
-        else{
+        Session sessionResult = sessions.getOrDefault(authToken, null);
+        if (sessionResult != null) {
+            sessions.remove(sessionResult.getId(), sessionResult);
+        } else {
+            log.warn("В сессии нет такого пользователя!");
             throw new SessionException("Пользователь с таким логином не найден");
 
         }
-        log.info("Пользователь "+authToken+" вышел из сессии");
+        log.info("Пользователь " + authToken + " вышел из сессии");
         return ResponseEntity.ok().body(null);
 
     }
-    public Session getSession(String authToken){
+
+    public Session getSession(String authToken) {
         return sessions.get(authToken);
     }
 }

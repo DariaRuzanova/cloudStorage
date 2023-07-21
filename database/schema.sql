@@ -10,7 +10,7 @@ create table if not exists cloud_DB.users
 create table  if not exists cloud_DB.files
 (
     id serial primary key,
-    file_name varchar(50) unique,
+    file_name varchar(50),
     type varchar(10) not null ,
     content bytea not null,
     create_date timestamp,

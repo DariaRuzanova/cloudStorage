@@ -1,4 +1,4 @@
-package com.example.cloudstorage.model;
+package com.example.DTO;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;

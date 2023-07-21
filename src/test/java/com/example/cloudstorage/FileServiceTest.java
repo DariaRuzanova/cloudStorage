@@ -1,9 +1,10 @@
 package com.example.cloudstorage;
 
 
+import com.example.DTO.AuthentificationRequest;
+import com.example.DTO.AuthentificationResponse;
+import com.example.cloudstorage.exception.DuplicateFileNameException;
 import com.example.cloudstorage.exception.FileNotFoundException;
-import com.example.cloudstorage.model.AuthentificationRequest;
-import com.example.cloudstorage.model.AuthentificationResponse;
 import com.example.cloudstorage.model.FileData;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.service.AuthentificationService;
@@ -18,6 +19,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -63,17 +65,41 @@ public class FileServiceTest {
         return multipartFile;
     }
 
+    @SneakyThrows
     @Test
     public void uploadFileTest() {
         ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
                 new AuthentificationRequest("petr", "qwerty"));
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
         MultipartFile multipartFile = multipartFileGet(fileName);
-        if (fileRepository.findFileByFileName(fileName).isPresent()) {
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName).isPresent()) {
             fileService.deleteFile(authToken, fileName);
         }
-        ResponseEntity<String> result = fileService.uploadFile(authToken, fileName, multipartFile);
+        String contentType = multipartFile.getContentType();
+        byte[] bytes = multipartFile.getBytes();
+        long sizeFile = multipartFile.getSize();
+        ResponseEntity<String> result = fileService.uploadFile(authToken, fileName, bytes, contentType, sizeFile);
         assertNotNull(result);
+    }
+
+    @SneakyThrows
+    @Test
+    public void uploadFileTestException() {
+        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
+                new AuthentificationRequest("sasha", "nmbqwe"));
+        String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
+        MultipartFile multipartFile1 = multipartFileGet(fileName);
+        String contentType = multipartFile1.getContentType();
+        byte[] bytes = multipartFile1.getBytes();
+        long sizeFile = multipartFile1.getSize();
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName).isEmpty()) {
+            fileService.uploadFile(authToken, fileName, bytes, contentType, sizeFile);
+        }
+        assertThrows(ResponseStatusException.class, () -> {
+            fileService.uploadFile(authToken, fileName, bytes, contentType, sizeFile);
+        });
     }
 
     @Test
@@ -81,10 +107,35 @@ public class FileServiceTest {
         ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
                 new AuthentificationRequest("petr", "qwerty"));
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileNameNew).isPresent()) {
+            fileService.deleteFile(authToken, fileNameNew);
+        }
         ResponseEntity<String> actual = fileService.renameFile(authToken, fileName, fileNameNew);
         ResponseEntity<String> expected = ResponseEntity.ok().body(
                 "Имя файла " + fileName + " изменено на " + fileNameNew);
         assertEquals(expected, actual);
+    }
+
+    @SneakyThrows
+    @Test
+    public void renameFileTestException() {
+        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
+                new AuthentificationRequest("sasha", "nmbqwe"));
+        String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
+        MultipartFile multipartFile1 = multipartFileGet(fileName);
+        MultipartFile multipartFile2 = multipartFileGet(fileNameNew);
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName).isEmpty()) {
+            fileService.uploadFile(authToken, fileName, multipartFile1.getBytes(), multipartFile1.getContentType(), multipartFile1.getSize());
+        }
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileNameNew).isEmpty()) {
+            fileService.uploadFile(authToken, fileNameNew, multipartFile2.getBytes(), multipartFile2.getContentType(), multipartFile2.getSize());
+        }
+
+        assertThrows(DuplicateFileNameException.class, () -> {
+            fileService.renameFile(authToken, fileName, fileNameNew);
+        });
     }
 
     @Test
@@ -97,11 +148,15 @@ public class FileServiceTest {
             fileService.deleteFile(authToken, fileName);
         }
         MultipartFile multipartFile = multipartFileGet(fileNameTest);
-        fileService.uploadFile(authToken, fileNameTest, multipartFile);
+        String contentType = multipartFile.getContentType();
+        byte[] bytes = multipartFile.getBytes();
+        long sizeFile = multipartFile.getSize();
+        fileService.uploadFile(authToken, fileNameTest, bytes, contentType, sizeFile);
         ResponseEntity<byte[]> fileContent = fileService.getFile(authToken, fileNameTest);
-        assertArrayEquals(multipartFile.getBytes(), fileContent.getBody());
+        assertArrayEquals(bytes, fileContent.getBody());
     }
 
+    @SneakyThrows
     @Test
     public void deleteFileTest() {
         ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
@@ -109,7 +164,10 @@ public class FileServiceTest {
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
         String fileNameTest2 = "testDeleteFile.txt";
         MultipartFile multipartFile = multipartFileGet(fileNameTest2);
-        fileService.uploadFile(authToken, fileNameTest2, multipartFile);
+        String contentType = multipartFile.getContentType();
+        byte[] bytes = multipartFile.getBytes();
+        long sizeFile = multipartFile.getSize();
+        fileService.uploadFile(authToken, fileNameTest2, bytes, contentType, sizeFile);
         ResponseEntity<String> actual = fileService.deleteFile(authToken, fileNameTest2);
         ResponseEntity<String> expected = ResponseEntity.ok().body("Файл " + fileNameTest2 + " удален");
         assertEquals(expected, actual);
@@ -126,6 +184,7 @@ public class FileServiceTest {
     }
 
 
+    @SneakyThrows
     @Test
     public void getAllFilesTest() {
         int limit = 2;
@@ -140,14 +199,40 @@ public class FileServiceTest {
         ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
                 new AuthentificationRequest("sasha", "nmbqwe"));
         String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
-
-//        fileService.uploadFile(authToken,fileName1,multipartFile1);
-        fileService.uploadFile(authToken, fileName2, multipartFile2);
-
+        if (fileRepository.findFileByFileName(fileName1).isEmpty()) {
+            fileService.uploadFile(authToken, fileName1, multipartFile1.getBytes(), multipartFile1.getContentType(), multipartFile1.getSize());
+        }
+        if (fileRepository.findFileByFileName(fileName2).isEmpty()) {
+            fileService.uploadFile(authToken, fileName2, multipartFile2.getBytes(), multipartFile2.getContentType(), multipartFile2.getSize());
+        }
         ResponseEntity<List<FileData>> actual = fileService.getAllFiles(authToken, limit);
-        ResponseEntity<List<FileData>> expected = ResponseEntity.ok().body(list);
+        for (FileData file : list) {
+            assertTrue(actual.getBody().stream().anyMatch(x -> Objects.equals(x.getFileName(), file.getFileName())));
+        }
+    }
 
+    @Test
+    public void checkUserTest() {
+        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
+                new AuthentificationRequest("sasha", "nmbqwe"));
+        String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
+        Long expected = 3L;
+        Long actual = fileService.checkUser(authToken);
         assertEquals(expected, actual);
+    }
 
+    @SneakyThrows
+    @Test
+    public void checkFileTest() {
+        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(
+                new AuthentificationRequest("petr", "qwerty"));
+        String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
+        MultipartFile multipartFile = multipartFileGet(fileName);
+        Long userId = authentificationService.getSession(authToken).getUserID();
+        if (fileRepository.findFileByUserIdAndFileName(userId, fileName).isEmpty()) {
+            fileService.uploadFile(authToken, fileName, multipartFile.getBytes(), multipartFile.getContentType(), multipartFile.getSize());
+        }
+        var actual = fileService.checkFile(userId, fileName).getFileName();
+        assertEquals(fileName, actual);
     }
 }

@@ -1,8 +1,8 @@
 package com.example.cloudstorage;
 
 import com.example.cloudstorage.exception.SessionException;
-import com.example.cloudstorage.model.AuthentificationRequest;
-import com.example.cloudstorage.model.AuthentificationResponse;
+import com.example.DTO.AuthentificationRequest;
+import com.example.DTO.AuthentificationResponse;
 import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.service.AuthentificationService;
@@ -17,12 +17,7 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
-import java.net.URLConnection;
 import java.util.Objects;
-import java.util.UUID;
 
 import static org.junit.Assert.*;
 
@@ -67,6 +62,7 @@ public class UserServiceTest {
             authentificationService.authentificationLogin(new AuthentificationRequest("petr", "111222"));
         });
     }
+
 
     @Test
     public void logoutTest(){
