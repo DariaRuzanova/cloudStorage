@@ -1,17 +1,13 @@
 package com.example.cloudstorage.service;
 
-import com.example.cloudstorage.entity.User;
-import com.example.cloudstorage.exception.SessionException;
 import com.example.cloudstorage.DTO.AuthentificationRequest;
 import com.example.cloudstorage.DTO.AuthentificationResponse;
+import com.example.cloudstorage.entity.User;
 import com.example.cloudstorage.model.Session;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.utils.CommonUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,7 +25,7 @@ public class AuthentificationService {
         this.userRepository = userRepository;
     }
 
-    public ResponseEntity<AuthentificationResponse> authentificationLogin(AuthentificationRequest authentificationRequest) {
+    public AuthentificationResponse authentificationLogin(AuthentificationRequest authentificationRequest) {
         AuthentificationResponse response;
 
         Optional<User> userFromDataBase = userRepository.findUserByLoginAndPassword(authentificationRequest.getLogin(),
@@ -41,23 +37,24 @@ public class AuthentificationService {
             log.info("Пользователь " + authentificationRequest.getLogin() + " авторизован");
         } else {
             log.error("Ошибка авторизации");
-            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED);
+            response = null;
         }
-        return ResponseEntity.ok().body(response);
+        return response;
     }
 
 
-    public ResponseEntity<Void> logout(String authToken) {
+    public boolean logout(String authToken) {
         Session sessionResult = sessions.getOrDefault(authToken, null);
+        boolean flag;
         if (sessionResult != null) {
             sessions.remove(sessionResult.getId(), sessionResult);
+            flag = true;
+            log.info("Пользователь " + authToken + " вышел из сессии");
         } else {
             log.warn("В сессии нет такого пользователя!");
-            throw new SessionException("Пользователь с таким логином не найден");
-
+            flag = false;
         }
-        log.info("Пользователь " + authToken + " вышел из сессии");
-        return ResponseEntity.ok().body(null);
+        return flag;
 
     }
 

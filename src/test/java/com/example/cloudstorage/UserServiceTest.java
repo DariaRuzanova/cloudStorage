@@ -1,21 +1,16 @@
 package com.example.cloudstorage;
 
-import com.example.cloudstorage.exception.SessionException;
 import com.example.cloudstorage.DTO.AuthentificationRequest;
 import com.example.cloudstorage.DTO.AuthentificationResponse;
-import com.example.cloudstorage.repository.FileRepository;
 import com.example.cloudstorage.repository.UserRepository;
 import com.example.cloudstorage.service.AuthentificationService;
-import com.example.cloudstorage.service.FileService;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.junit4.SpringRunner;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Objects;
 
@@ -32,14 +27,8 @@ public class UserServiceTest {
     private UserRepository userRepository;
 
     @Autowired
-    private FileRepository fileRepository;
-
-    @Autowired
     private AuthentificationService authentificationService;
 
-
-    @Autowired
-    private FileService fileService;
 
     @Test
     public void findUserByLoginAndPasswordTest() {
@@ -50,32 +39,26 @@ public class UserServiceTest {
 
     @Test
     public void authentificationLoginTest() {
-        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(new AuthentificationRequest("petr", "qwerty"));
+        AuthentificationResponse response = authentificationService.authentificationLogin(new AuthentificationRequest("petr", "qwerty"));
         assertNotNull(response);
-        assertNotNull(Objects.requireNonNull(response.getBody()).getAuthToken());
-        assertNotEquals(0,response.getBody().getAuthToken().length());
+        assertNotNull(Objects.requireNonNull(response).getAuthToken());
+        assertNotEquals(0, response.getAuthToken().length());
     }
-    @Test
-    public void authentificationLoginExceptionTest(){
-
-        assertThrows(ResponseStatusException.class, ()->{
-            authentificationService.authentificationLogin(new AuthentificationRequest("petr", "111222"));
-        });
-    }
-
 
     @Test
-    public void logoutTest(){
-        ResponseEntity<AuthentificationResponse> response = authentificationService.authentificationLogin(new AuthentificationRequest("petr", "qwerty"));
-        String authToken = Objects.requireNonNull(response.getBody()).getAuthToken();
-
-        ResponseEntity<Void> actual = authentificationService.logout(authToken);
-        ResponseEntity<Void> expected = ResponseEntity.ok().body(null);
-        assertEquals(expected,actual);
-
-        assertThrows(SessionException.class, ()-> {
-            authentificationService.logout(authToken);
-        });
+    public void authentificationLoginExceptionTest() {
+        AuthentificationResponse actual = authentificationService.authentificationLogin(new AuthentificationRequest("petr", "111222"));
+        assertNull(actual);
     }
 
+
+    @Test
+    public void logoutTest() {
+        AuthentificationResponse response = authentificationService.authentificationLogin(new AuthentificationRequest("petr", "qwerty"));
+        String authToken = Objects.requireNonNull(response).getAuthToken();
+
+        boolean actual = authentificationService.logout(authToken);
+        boolean expected = true;
+        assertEquals(expected, actual);
+    }
 }
